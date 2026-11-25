@@ -102,4 +102,16 @@ using Setfield
     @set! ad.tag = CustomTestTag()
     @test ad.tag isa CustomTestTag
     @test ad isa AutoPolyesterForwardDiff{10}
+
+    ad = AutoPiste()
+    @set! ad.mode = ADTypes.ReverseMode()
+    @test ad isa AutoPiste{ADTypes.ReverseMode, nothing}
+
+    ad = AutoPiste(; chunksize = 4)
+    @set! ad.mode = ADTypes.ForwardMode()
+    @test ad isa AutoPiste{ADTypes.ForwardMode, 4}
+
+    ad = AutoPiste(; mode = ADTypes.ReverseMode(), chunksize = 4)
+    @set! ad.mode = ADTypes.ForwardMode()
+    @test ad isa AutoPiste{ADTypes.ForwardMode, 4}
 end

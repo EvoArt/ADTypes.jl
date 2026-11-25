@@ -395,10 +395,13 @@ Defined by [ADTypes.jl](https://github.com/SciML/ADTypes.jl).
 
     AutoPiste(; mode=ForwardMode(), chunksize=nothing)
 
+`chunksize` may also be given as `Val(n)`, which produces the same selector type as the `Int` `n`.
+
 # Type parameters
 
-  - `chunksize`: the number of partials carried per forward pass (forward mode only), either `nothing` or an `Int`.
+  - `chunksize`: the number of partials carried per forward pass (forward mode only), either `nothing` or a positive `Int`.
     Pass an explicit value when compiling with `juliac --trim`, so that the width is known statically.
+    Any other value throws an `ArgumentError`.
 
 # Fields
 
@@ -406,6 +409,15 @@ Defined by [ADTypes.jl](https://github.com/SciML/ADTypes.jl).
 """
 struct AutoPiste{M <: Union{ForwardMode, ReverseMode}, chunksize} <: AbstractADType
     mode::M
+
+    function AutoPiste{M, chunksize}(mode::M) where {M <: Union{ForwardMode, ReverseMode}, chunksize}
+        if !(chunksize isa Union{Nothing, Int})
+            throw(ArgumentError("chunksize must be `nothing` or an `Int`, got $(repr(chunksize))"))
+        elseif chunksize isa Int && chunksize <= 0
+            throw(ArgumentError("chunksize must be positive, got $chunksize"))
+        end
+        return new{M, chunksize}(mode)
+    end
 end
 
 function AutoPiste(; mode::M = ForwardMode(), chunksize = nothing) where {M}

@@ -221,6 +221,12 @@ end
     @test mode(ad) isa ReverseMode
 
     @test_throws TypeError AutoPiste(; mode = SymbolicMode())
+
+    for chunksize in (4.0, :wide, true, Val(:wide), 0, -1)
+        @test_throws ArgumentError AutoPiste(; chunksize)
+    end
+    @test_throws ArgumentError AutoPiste{ForwardMode, :wide}(ForwardMode())
+    @test_throws ArgumentError AutoPiste{ReverseMode, 4.0}(ReverseMode())
 end
 
 @testset "AutoPolyesterForwardDiff" begin
