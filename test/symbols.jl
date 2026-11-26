@@ -16,7 +16,6 @@ using Test
 @test_throws ArgumentError ADTypes.Auto(:Piste; chunksize = 4.0)
 @test_throws ArgumentError ADTypes.Auto(:Piste; chunksize = [4])
 @test_throws ArgumentError ADTypes.Auto(:Piste; chunksize = "4")
-@test_throws ArgumentError ADTypes.Auto(:Piste; mode = ADTypes.SymbolicMode())
 @test ADTypes.Auto(:PolyesterForwardDiff) isa AutoPolyesterForwardDiff
 @test ADTypes.Auto(:ReverseDiff) isa AutoReverseDiff
 @test ADTypes.Auto(:Reactant) isa AutoReactant

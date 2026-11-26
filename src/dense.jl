@@ -396,13 +396,12 @@ Defined by [ADTypes.jl](https://github.com/SciML/ADTypes.jl).
     AutoPiste(; mode=ForwardMode(), chunksize=nothing)
 
 `chunksize` may also be given as `Val(n)`, which produces the same selector type as the `Int` `n`.
-Any other `mode` or `chunksize` throws an `ArgumentError`.
 
 # Type parameters
 
-  - `chunksize`: the number of partials carried per forward pass, either `nothing` or a positive `Int`.
-    Only forward mode uses it; reverse mode keeps it so that changing `mode` (e.g. with Setfield.jl) preserves it.
+  - `chunksize`: the number of partials carried per forward pass (forward mode only), either `nothing` or a positive `Int`.
     Pass an explicit value when compiling with `juliac --trim`, so that the width is known statically.
+    Any other value throws an `ArgumentError`.
 
 # Fields
 
@@ -417,30 +416,19 @@ struct AutoPiste{M <: Union{ForwardMode, ReverseMode}, chunksize} <: AbstractADT
     end
 end
 
-# Validate before the value is used as a type parameter: a non-`isbits` value such as a
-# `String`, `BigInt` or `Vector` would otherwise throw a `TypeError` from `AutoPiste{M, c}`.
+# Runs before `chunksize` becomes a type parameter: a non-isbits value such as a `String`,
+# `BigInt` or `Vector` would otherwise throw a `TypeError` from `AutoPiste{M, chunksize}`.
 function _check_piste_chunksize(chunksize)
     if !(chunksize isa Union{Nothing, Int})
-        throw(
-            ArgumentError(
-                "chunksize must be `nothing` or a positive `Int`, got $(repr(chunksize)) of type $(typeof(chunksize))",
-            ),
-        )
+        throw(ArgumentError("chunksize must be `nothing` or an `Int`, got $(repr(chunksize))"))
     elseif chunksize isa Int && chunksize <= 0
         throw(ArgumentError("chunksize must be positive, got $chunksize"))
     end
     return chunksize
 end
 
-_check_piste_mode(mode::Union{ForwardMode, ReverseMode}) = mode
-function _check_piste_mode(mode)
-    throw(ArgumentError("mode must be `ForwardMode()` or `ReverseMode()`, got $(repr(mode))"))
-end
-
-function AutoPiste(; mode = ForwardMode(), chunksize = nothing)
-    m = _check_piste_mode(mode)
-    c = _check_piste_chunksize(_unwrap_val(chunksize))
-    return AutoPiste{typeof(m), c}(m)
+function AutoPiste(; mode::M = ForwardMode(), chunksize = nothing) where {M}
+    return AutoPiste{M, _check_piste_chunksize(_unwrap_val(chunksize))}(mode)
 end
 
 mode(backend::AutoPiste) = backend.mode

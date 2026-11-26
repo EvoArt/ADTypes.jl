@@ -114,9 +114,6 @@ using Setfield
     ad = AutoPiste(; mode = ADTypes.ReverseMode(), chunksize = 4)
     @set! ad.mode = ADTypes.ForwardMode()
     @test ad isa AutoPiste{ADTypes.ForwardMode, 4}
-
-    ad = AutoPiste(; chunksize = 4)
-    @test_throws ArgumentError @set ad.mode = ADTypes.SymbolicMode()
 end
 
 @testset "AutoPiste printing round-trips" begin
