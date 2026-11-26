@@ -220,13 +220,29 @@ end
     @test ad isa AutoPiste{ReverseMode, nothing}
     @test mode(ad) isa ReverseMode
 
-    @test_throws TypeError AutoPiste(; mode = SymbolicMode())
+    # A selector built from constants must stay inferable, which `juliac --trim` relies on
+    @test @inferred((() -> AutoPiste(; chunksize = 4))()) isa AutoPiste{ForwardMode, 4}
+    @test @inferred((() -> AutoPiste(; chunksize = Val(4)))()) isa AutoPiste{ForwardMode, 4}
+    @test @inferred((() -> AutoPiste(; mode = ReverseMode()))()) isa
+        AutoPiste{ReverseMode, nothing}
 
-    for chunksize in (4.0, :wide, true, Val(:wide), 0, -1)
-        @test_throws ArgumentError AutoPiste(; chunksize)
+    for mode in (SymbolicMode(), ForwardOrReverseMode(), ForwardMode, :forward, nothing)
+        @test_throws ArgumentError AutoPiste(; mode)
     end
+
+    # Non-isbits values ("4", BigInt, Vector) cannot be type parameters, so they must be
+    # rejected before `AutoPiste{M, chunksize}` is formed, or they surface as a TypeError
+    for chunksize in (
+            4.0, :wide, true, Val(:wide), 0, -1, Val(0), "4", big(4), [4], Int32(4), missing,
+        )
+        @test_throws ArgumentError AutoPiste(; chunksize)
+        @test_throws ArgumentError AutoPiste(; mode = ReverseMode(), chunksize)
+    end
+    @test_throws "of type BigInt" AutoPiste(; chunksize = big(4))
     @test_throws ArgumentError AutoPiste{ForwardMode, :wide}(ForwardMode())
     @test_throws ArgumentError AutoPiste{ReverseMode, 4.0}(ReverseMode())
+    @test_throws ArgumentError AutoPiste{ForwardMode, 0}(ForwardMode())
+    @test_throws ArgumentError AutoPiste{ForwardMode, Val(4)}(ForwardMode())
 end
 
 @testset "AutoPolyesterForwardDiff" begin

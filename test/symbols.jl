@@ -12,7 +12,11 @@ using Test
 @test ADTypes.Auto(:Mooncake) isa AutoMooncake
 @test ADTypes.Auto(:Piste) isa AutoPiste
 @test ADTypes.Auto(:Piste; chunksize = 4) isa AutoPiste{ADTypes.ForwardMode, 4}
+@test ADTypes.Auto(:Piste; mode = ADTypes.ReverseMode()) isa AutoPiste{ADTypes.ReverseMode, nothing}
 @test_throws ArgumentError ADTypes.Auto(:Piste; chunksize = 4.0)
+@test_throws ArgumentError ADTypes.Auto(:Piste; chunksize = [4])
+@test_throws ArgumentError ADTypes.Auto(:Piste; chunksize = "4")
+@test_throws ArgumentError ADTypes.Auto(:Piste; mode = ADTypes.SymbolicMode())
 @test ADTypes.Auto(:PolyesterForwardDiff) isa AutoPolyesterForwardDiff
 @test ADTypes.Auto(:ReverseDiff) isa AutoReverseDiff
 @test ADTypes.Auto(:Reactant) isa AutoReactant
